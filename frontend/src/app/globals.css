@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* --- COLORES DE IDENTIDAD (Extradíos del Logo) --- */
+  --amgo-green: #009A44;
+  --amgo-red: #CE1126;
+  --amgo-dark: #111111;
+  
+  /* --- BASE --- */
+  /* Usamos un "casi blanco" para no cansar la vista */
+  --background: #FAFAFA; 
+  --foreground: #111111;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  /* Asegura que el footer siempre se vaya al fondo si hay poco contenido */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- TEXTURA DE TABLERO DE GO (GOBAN) --- */
+/* Esto crea una cuadrícula muy sutil, como las líneas del tablero */
+.bg-goban-pattern {
+  background-color: var(--background);
+  background-image:
+    linear-gradient(to right, rgba(0, 154, 68, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 154, 68, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px; /* Tamaño de cada cuadro */
+}
+
+/* --- UTILIDAD PARA TEXTO GRADIENTE (Estilo Mexicano) --- */
+.text-gradient-mex {
+  background: linear-gradient(135deg, var(--amgo-green) 0%, #004D22 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
