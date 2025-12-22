@@ -1,0 +1,1 @@
+# asociacion-mexicana-go-strapi
