@@ -1,4 +1,8 @@
 [build]
   base = "frontend"
-  publish = ".next"
   command = "npm run build"
+  ## ELIMINAMOS LA LÍNEA DE PUBLISH
+  ## Netlify detectará automáticamente lo que necesita.
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
