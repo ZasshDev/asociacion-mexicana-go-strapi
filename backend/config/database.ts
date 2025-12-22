@@ -1,8 +1,39 @@
 import path from 'path';
+import pgConnectionString from 'pg-connection-string'; // Importamos el parser
+
+const { parse } = pgConnectionString;
 
 export default ({ env }) => {
-  // Aquí es donde Strapi decide si usa Postgres (Prod) o Sqlite (Local)
   const client = env('DATABASE_CLIENT', 'sqlite');
+
+  // Lógica para decidir la configuración de Postgres
+  let postgresConnection = {};
+
+  if (client === 'postgres' && env('DATABASE_URL')) {
+    // CASO RENDER / SUPABASE: Si hay una URL, la parseamos
+    const config = parse(env('DATABASE_URL'));
+    postgresConnection = {
+      host: config.host,
+      port: config.port,
+      database: config.database,
+      user: config.user,
+      password: config.password,
+      ssl: {
+        rejectUnauthorized: false, // Importante para Supabase
+      },
+    };
+  } else {
+    // CASO MANUAL: Si no hay URL, busca variables sueltas (tu código original)
+    postgresConnection = {
+      host: env('DATABASE_HOST', '127.0.0.1'),
+      port: env.int('DATABASE_PORT', 5432),
+      database: env('DATABASE_NAME', 'strapi'),
+      user: env('DATABASE_USERNAME', 'strapi'),
+      password: env('DATABASE_PASSWORD', 'strapi'),
+      ssl: env.bool('DATABASE_SSL', false),
+      schema: env('DATABASE_SCHEMA', 'public'),
+    };
+  }
 
   const connections = {
     sqlite: {
@@ -12,17 +43,7 @@ export default ({ env }) => {
       useNullAsDefault: true,
     },
     postgres: {
-      connection: {
-        // ELIMINAMOS 'connectionString' para evitar conflictos.
-        // Usaremos estrictamente las variables que configuramos en Railway:
-        host: env('DATABASE_HOST', '127.0.0.1'),
-        port: env.int('DATABASE_PORT', 5432),
-        database: env('DATABASE_NAME', 'strapi'),
-        user: env('DATABASE_USERNAME', 'strapi'),
-        password: env('DATABASE_PASSWORD', 'strapi'),
-        ssl: env.bool('DATABASE_SSL', false),
-        schema: env('DATABASE_SCHEMA', 'public'),
-      },
+      connection: postgresConnection, // Usamos la variable dinámica
       pool: {
         min: env.int('DATABASE_POOL_MIN', 2),
         max: env.int('DATABASE_POOL_MAX', 10),
