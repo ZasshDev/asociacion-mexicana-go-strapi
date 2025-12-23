@@ -1,17 +1,19 @@
 import Link from "next/link";
 import Image from "next/image";
+import { fetchAPI, getStrapiURL } from "@/lib/strapi"; // <--- 1. Importamos tus herramientas
 
-// --- NUEVO: Función para traer las 3 últimas noticias ---
+// --- FUNCIÓN OPTIMIZADA ---
 async function getLatestPosts() {
   try {
-    // Pedimos solo 3 posts, ordenados por fecha (más reciente primero)
-    const res = await fetch(
-      "http://127.0.0.1:1337/api/posts?populate=*&pagination[limit]=3&sort=publishedAt:desc", 
-      { cache: "no-store" }
+    // Usamos fetchAPI en lugar de fetch directo para que tome la URL de Render automáticamente
+    const response = await fetchAPI(
+      "/posts?populate=*&pagination[limit]=3&sort=publishedAt:desc",
+      {}, 
+      { cache: "no-store" } // Para que las noticias se actualicen siempre
     );
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.data; 
+    
+    // fetchAPI ya devuelve el JSON. En Strapi los datos suelen estar en response.data
+    return response?.data || []; 
   } catch (error) {
     console.error("Error cargando noticias:", error);
     return [];
@@ -24,7 +26,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-goban-pattern flex flex-col font-sans">
       
-      {/* --- HERO SECTION (TU CÓDIGO ORIGINAL) --- */}
+      {/* --- HERO SECTION (INTACTO) --- */}
       <section className="relative bg-amgo-dark text-white overflow-hidden">
         <div className="absolute inset-0 bg-mexican-hero opacity-95 z-0"></div>
         
@@ -70,7 +72,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* --- SECCIÓN DE TARJETAS (TU CÓDIGO ORIGINAL) --- */}
+      {/* --- SECCIÓN DE TARJETAS (INTACTO) --- */}
       <section className="container mx-auto px-6 -mt-24 relative z-20 pb-24">
         <div className="grid md:grid-cols-3 gap-8">
           {/* Tarjeta 1 - Ranking */}
@@ -105,7 +107,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* --- NUEVA SECCIÓN: ÚLTIMAS NOTICIAS --- */}
+      {/* --- SECCIÓN: ÚLTIMAS NOTICIAS (CONECTADA A RENDER) --- */}
       {latestPosts.length > 0 && (
         <section className="py-20 bg-white">
           <div className="container mx-auto px-6">
@@ -123,14 +125,20 @@ export default async function Home() {
               {latestPosts.map((post: any) => {
                  const title = post.title || "Sin título";
                  const excerpt = post.excerpt || "Sin resumen";
+                 // Validamos el slug, si no existe ponemos "#"
                  const slug = post.slug || "#";
                  
-                 // Imagen
+                 // --- LOGICA DE IMAGEN MEJORADA ---
                  const coverData = post.cover; 
                  let imageUrl = "https://via.placeholder.com/800x600?text=AMGo"; 
+                 
                  if (coverData) {
-                    const url = coverData.url || (coverData[0] && coverData[0].url);
-                    if (url) imageUrl = `http://127.0.0.1:1337${url}`;
+                    // Si es un array (Strapi v4/v5 a veces varía) o objeto directo
+                    const url = coverData.url || (Array.isArray(coverData) && coverData[0]?.url);
+                    if (url) {
+                        // Usamos la función auxiliar para que funcione en Prod (Render) y Dev (Local)
+                        imageUrl = getStrapiURL(url);
+                    }
                  }
 
                  return (
@@ -142,7 +150,7 @@ export default async function Home() {
                              alt={title} 
                              fill 
                              className="object-cover group-hover:scale-105 transition-transform duration-500" 
-                             unoptimized
+                             unoptimized // Importante si usas hostings externos sin configurar dominios en next.config
                            />
                         </div>
                         <div className="p-6 flex flex-col flex-grow">
