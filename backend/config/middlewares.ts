@@ -3,7 +3,8 @@ export default [
   {
     name: 'strapi::cors',
     config: {
-      origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+      enabled: true, 
+      origin: ['*'], // <--- AQUÍ ESTÁ LA MAGIA. El asterisco abre la puerta a todos.
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
       headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
       keepHeaderOnError: true,
