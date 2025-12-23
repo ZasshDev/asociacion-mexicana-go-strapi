@@ -1,10 +1,10 @@
 import path from 'path';
-import dns from 'dns'; // <--- 1. Importamos el módulo DNS
+import dns from 'dns'; 
 import pgConnectionString from 'pg-connection-string';
 
 const { parse } = pgConnectionString;
 
-// <--- 2. FORZAMOS A NODE A USAR IPV4 AQUI MISMO
+// 1. FORZAMOS A NODE A USAR IPV4 (Vital para Supabase en Node 17+)
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
@@ -15,18 +15,22 @@ export default ({ env }) => {
   let postgresConnection = {};
 
   if (client === 'postgres' && env('DATABASE_URL')) {
+    // Caso A: Usando la URL de conexión (Tu caso con Supabase)
     const config = parse(env('DATABASE_URL'));
+    
     postgresConnection = {
       host: config.host,
       port: config.port,
       database: config.database,
       user: config.user,
       password: config.password,
+      schema: env('DATABASE_SCHEMA', 'public'), // <--- AGREGADO: Importante para estabilidad
       ssl: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: false, // Necesario para la conexión segura a Supabase
       },
     };
   } else {
+    // Caso B: Variables individuales (Host, Port, User separados)
     postgresConnection = {
       host: env('DATABASE_HOST', '127.0.0.1'),
       port: env.int('DATABASE_PORT', 5432),
