@@ -1,16 +1,20 @@
 import path from 'path';
-import pgConnectionString from 'pg-connection-string'; // Importamos el parser
+import dns from 'dns'; // <--- 1. Importamos el módulo DNS
+import pgConnectionString from 'pg-connection-string';
 
 const { parse } = pgConnectionString;
+
+// <--- 2. FORZAMOS A NODE A USAR IPV4 AQUI MISMO
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 export default ({ env }) => {
   const client = env('DATABASE_CLIENT', 'sqlite');
 
-  // Lógica para decidir la configuración de Postgres
   let postgresConnection = {};
 
   if (client === 'postgres' && env('DATABASE_URL')) {
-    // CASO RENDER / SUPABASE: Si hay una URL, la parseamos
     const config = parse(env('DATABASE_URL'));
     postgresConnection = {
       host: config.host,
@@ -19,11 +23,10 @@ export default ({ env }) => {
       user: config.user,
       password: config.password,
       ssl: {
-        rejectUnauthorized: false, // Importante para Supabase
+        rejectUnauthorized: false,
       },
     };
   } else {
-    // CASO MANUAL: Si no hay URL, busca variables sueltas (tu código original)
     postgresConnection = {
       host: env('DATABASE_HOST', '127.0.0.1'),
       port: env.int('DATABASE_PORT', 5432),
@@ -43,7 +46,7 @@ export default ({ env }) => {
       useNullAsDefault: true,
     },
     postgres: {
-      connection: postgresConnection, // Usamos la variable dinámica
+      connection: postgresConnection,
       pool: {
         min: env.int('DATABASE_POOL_MIN', 2),
         max: env.int('DATABASE_POOL_MAX', 10),
